@@ -68,7 +68,7 @@ if __name__ == "__main__":
         print("Title: ", submission.title)
         print("Loading comments...")
         print(datetime.now())
-        submission.comments.replace_more(limit=30)
+        submission.comments.replace_more(limit=constants.N_COMMENTS)
         print("Comments loaded:")
         print(len(submission.comments))
         print(datetime.now())

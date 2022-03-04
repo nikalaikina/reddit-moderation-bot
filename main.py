@@ -6,6 +6,7 @@ import praw
 
 
 # TODO: check id uniqueness
+#       if comment id is unique for subreddit, then comment.permalink can be replaced with comment.id
 # data.json is a dictionary: comment.permalink -> timestamp (first time seen negative)
 def read_data():
     if not os.path.isfile("data.json"):

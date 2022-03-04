@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime, timedelta
-
+import constants
 import praw
 
 
@@ -13,31 +13,31 @@ def read_data():
         return {}
     else:
         # TODO: recover parse failure
-        with open('data.json') as outfile:
+        with open("data.json") as outfile:
             return json.load(outfile, object_hook=object_hook)
 
 
 def write_data(x):
-    with open("data.json", 'w') as outfile:
+    with open("data.json", "w") as outfile:
         json.dump(x, outfile, indent=2, default=default)
 
 
 def default(obj):
     if isinstance(obj, datetime):
-        return { '_isoformat': obj.isoformat() }
-    raise TypeError('...')
+        return {"_isoformat": obj.isoformat()}
+    raise TypeError("...")
 
 
 def object_hook(obj):
-    _isoformat = obj.get('_isoformat')
+    _isoformat = obj.get("_isoformat")
     if _isoformat is not None:
         return datetime.fromisoformat(_isoformat)
     return obj
 
 
 def process_comment(item):
-    if item.score < 0:
-        if (item.permalink in state) and (state[item.permalink] < hourAgo):
+    if item.score < constants.SCORE_THRESHOLD:
+        if (item.permalink in state) and (state[item.permalink] < timeAgo):
             print("Deleting:")
             # TODO: spam it or remove? test it
             # item.mod.remove(spam=True)
@@ -55,14 +55,14 @@ def process_comment(item):
         del state[item.permalink]
 
 
-reddit = praw.Reddit('bot1')
-subreddit = reddit.subreddit("femalefashionadvice")
+reddit = praw.Reddit("bot1")
+subreddit = reddit.subreddit(constants.SUBREDDIT)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     state = read_data()
     print(state)
 
-    for submission in subreddit.hot(limit=100):
+    for submission in subreddit.hot(limit=constants.N_HOT):
         process_comment(submission)
 
         print("Title: ", submission.title)
@@ -73,9 +73,13 @@ if __name__ == '__main__':
         print(len(submission.comments))
         print(datetime.now())
 
-        hourAgo = (datetime.now() - timedelta(hours=1))
+        timeAgo = datetime.now() - timedelta(hours=constants.TIME_WINDOW_HOURS)
 
-        not_deleted = (c for c in submission.comments.list() if c.collapsed_reason_code != 'DELETED')
+        not_deleted = (
+            c
+            for c in submission.comments.list()
+            if c.collapsed_reason_code != "DELETED"
+        )
 
         for comment in not_deleted:
             process_comment(comment)

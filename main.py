@@ -34,14 +34,12 @@ def object_hook(obj):
     return obj
 
 
-
-
 def process_comment(item):
     if item.score < 0:
         if (item.permalink in state) and (state[item.permalink] < hourAgo):
             print("Deleting:")
             # TODO: spam it or remove? test it
-            item.mod.remove(spam=True)
+            # item.mod.remove(spam=True)
             del state[item.permalink]
         elif item.permalink not in state:
             print("Noting:")
@@ -76,9 +74,8 @@ if __name__ == '__main__':
 
         hourAgo = (datetime.now() - timedelta(hours=1))
 
-        not_deleted = (c for c in submission.comments if c.collapsed_reason_code != 'DELETED')
+        not_deleted = (c for c in submission.comments.list() if c.collapsed_reason_code != 'DELETED')
 
-        # TODO: traverse tree
         for comment in not_deleted:
             process_comment(comment)
 

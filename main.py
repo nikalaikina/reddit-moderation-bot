@@ -33,6 +33,29 @@ def object_hook(obj):
         return datetime.fromisoformat(_isoformat)
     return obj
 
+
+
+
+def process_comment(item):
+    if item.score < 0:
+        if (item.permalink in state) and (state[item.permalink] < hourAgo):
+            print("Deleting:")
+            # TODO: spam it or remove? test it
+            item.mod.remove(spam=True)
+            del state[item.permalink]
+        elif item.permalink not in state:
+            print("Noting:")
+            state[item.permalink] = datetime.now()
+
+        print(item.score)
+        print(item.permalink)
+        print(item.body)
+        print("---")
+    # comment/topic went positive
+    elif item.permalink in state:
+        del state[item.permalink]
+
+
 reddit = praw.Reddit('bot1')
 subreddit = reddit.subreddit("femalefashionadvice")
 
@@ -41,6 +64,8 @@ if __name__ == '__main__':
     print(state)
 
     for submission in subreddit.hot(limit=100):
+        process_comment(submission)
+
         print("Title: ", submission.title)
         print("Loading comments...")
         print(datetime.now())
@@ -55,23 +80,7 @@ if __name__ == '__main__':
 
         # TODO: traverse tree
         for comment in not_deleted:
-            if comment.score < 0:
-                if (comment.permalink in state) and (state[comment.permalink] < hourAgo):
-                    print("Deleting:")
-                    # TODO: spam it or remove? test it
-                    comment.mod.remove(spam=True)
-                    del state[comment.permalink]
-                elif comment.permalink not in state:
-                    print("Noting:")
-                    state[comment.permalink] = datetime.now()
-
-                print(comment.score)
-                print(comment.permalink)
-                print(comment.body)
-                print("---")
-            # comment went positive
-            elif comment.permalink in state:
-                del state[comment.permalink]
+            process_comment(comment)
 
         write_data(state)
         print("---------------------------------\n")

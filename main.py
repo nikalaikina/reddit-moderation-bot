@@ -11,6 +11,7 @@ def read_data():
     if not os.path.isfile("data.json"):
         return {}
     else:
+        # TODO: recover parse failure
         with open('data.json') as outfile:
             return json.load(outfile, object_hook=object_hook)
 
@@ -39,24 +40,26 @@ if __name__ == '__main__':
     state = read_data()
     print(state)
 
-    for submission in subreddit.hot(limit=30):
+    for submission in subreddit.hot(limit=100):
         print("Title: ", submission.title)
         print("Loading comments...")
         print(datetime.now())
-        submission.comments.replace_more(limit=5)
+        submission.comments.replace_more(limit=30)
         print("Comments loaded:")
         print(len(submission.comments))
         print(datetime.now())
 
         hourAgo = (datetime.now() - timedelta(hours=1))
 
+        not_deleted = (c for c in submission.comments if c.collapsed_reason_code != 'DELETED')
+
         # TODO: traverse tree
-        # TODO: filter deleted out
-        for comment in submission.comments:
+        for comment in not_deleted:
             if comment.score < 0:
                 if (comment.permalink in state) and (state[comment.permalink] < hourAgo):
-                    # TODO: spam it
                     print("Deleting:")
+                    # TODO: spam it or remove? test it
+                    comment.mod.remove(spam=True)
                     del state[comment.permalink]
                 elif comment.permalink not in state:
                     print("Noting:")

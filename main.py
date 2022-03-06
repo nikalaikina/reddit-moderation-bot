@@ -39,7 +39,9 @@ def process_comment(item):
     if item.score < constants.SCORE_THRESHOLD:
         if (item.permalink in state) and (state[item.permalink] < timeAgo):
             print("Deleting:")
-            # TODO: spam it or remove? test it
+            # TODO: spam/remove it? test it
+            # Also, lock the comment
+            # item.mod.lock()
             # item.mod.remove(spam=True)
             del state[item.permalink]
         elif item.permalink not in state:
